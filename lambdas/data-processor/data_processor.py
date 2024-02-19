@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import os
 
@@ -39,6 +40,7 @@ def lambda_handler(event: dict, context) -> dict:
 
         print("Storing refined event")
         df = pd.DataFrame(event)
+        df["ingestion_ts"] = dt.datetime.today()
         df.to_parquet(
             f"s3://{REFINED_BUCKET}/{PREFIX}/{event['id']}_"
             f"{event['source']}.parquet",
