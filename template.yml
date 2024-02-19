@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: "Stack for the Data Processing on AWS workshop"
-
 Parameters:
     Module:
         Type: String
@@ -116,15 +115,9 @@ Resources:
         Type: AWS::Serverless::Api
         Properties:
             StageName: !Sub "${Environment}-${UniqueIdentifier}"
-            Auth:
-                ApiKeyRequired: true
             Tags:
                 Environment: !Ref Environment
                 Module: !Ref Module
-            MethodSettings:
-              - HttpMethod: "*"
-                ResourcePath: "/*"
-                ThrottlingBurstLimit: 600
     ApiKey:
         Type: AWS::ApiGateway::ApiKey
         Properties:
@@ -136,7 +129,7 @@ Resources:
                   Value: !Ref Environment
                 - Key: "Module"
                   Value: !Ref Module
-    UsagePlan:
+    ApiUsagePlan:
         Type: AWS::ApiGateway::UsagePlan
         Properties:
             ApiStages:
