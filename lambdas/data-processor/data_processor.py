@@ -41,9 +41,9 @@ def lambda_handler(event: dict, context) -> dict:
         print("Storing refined event")
         df = pd.DataFrame(event)
         df["ingestion_ts"] = dt.datetime.today()
-        df.to_parquet(
+        df.to_csv(
             f"s3://{REFINED_BUCKET}/{PREFIX}/{event['id']}_"
-            f"{event['source']}.parquet",
+            f"{event['source']}.csv",
             index=False,
         )
     except Exception as e:
