@@ -65,13 +65,11 @@ Resources:
                     REFINED_BUCKET: !Ref RefinedBucket
             Events:
                 LogEvent:
-                    Type: "HttpApi"
+                    Type: "Api"
                     Properties:
-                        ApiId: !Ref RestApi
+                        RestApiId: !Ref RestApi
                         Method: POST
                         Path: /log
-                        TimeoutInMillis: 15000
-                        PayloadFormatVersion: "2.0"
                         Auth:
                             ApiKeyRequired: true
             Tags:
@@ -115,41 +113,9 @@ Resources:
     RestApi:
         Type: AWS::Serverless::Api
         Properties:
-            StageName: !Sub "${Environment}-${UniqueIdentifier}"
-            Tags:
-                Environment: !Ref Environment
-                Module: !Ref Module
-    ApiKey:
-        Type: AWS::ApiGateway::ApiKey
-        Properties:
-            Name: !Sub "api-key-${UniqueIdentifier}"
-            Description: "API Key"
-            Enabled: true
-            Tags:
-                - Key: "Environment"
-                  Value: !Ref Environment
-                - Key: "Module"
-                  Value: !Ref Module
-    ApiUsagePlan:
-        Type: AWS::ApiGateway::UsagePlan
-        Properties:
-            ApiStages:
-              - ApiId: !Ref RestApi
-                Stage: !Ref RestApi.Stage
-            Quota:
-                Limit: 1000
-                Period: MONTH
-            Description: "Api usage plan for RestApi"
-            UsagePlanName: !Sub "usage-plan-${UniqueIdentifier}"
-            Throttle:
-                BurstLimit: 600
-                RateLimit: 600
-    UsagePlanKey:
-        Type: AWS::ApiGateway::UsagePlanKey
-        Properties:
-            KeyId: !Ref ApiKey
-            KeyType: API_KEY
-            UsagePlanId: !Ref ApiUsagePlan
+            StageName: !Ref Environment
+            Auth:
+              ApiKeyRequired: true
 ################################ Glue ##########################################
     RefinedDb:
         Type: AWS::Glue::Database
