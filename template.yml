@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "Stack for the Data Processing on AWS workshop"
+
+Parameters:
+    Module:
+        Type: String
+        Default: "data-processing-workshop"
+    Environment:
+        Type: String
+        AllowedValues:
+            - "development"
+            - "acceptance"
+            - "staging"
+            - "qa"
+            - "production"
+    UniqueIdentifier:
+        Type: String
+        Description: "Stack Identifier"
+
+Resources:
+################################ S3 ############################################
+    RawBucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+            BucketName: !Sub "raw-bucket-${Environment}-${UniqueIdentifier}"
+            Tags:
+                - Key: "Environment"
+                  Value: !Ref Environment
+                - Key: "Module"
+                  Value: !Ref Module
+    RefinedBucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+            BucketName: !Sub "refined-bucket-${Environment}-${UniqueIdentifier}"
+            Tags:
+                - Key: "Environment"
+                  Value: !Ref Environment
+                - Key: "Module"
+                  Value: !Ref Module
+    CuratedBucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+            BucketName: !Sub "curated-bucket-${Environment}-${UniqueIdentifier}"
+            NotificationConfiguration:
+                EventBridgeConfiguration:
+                    EventBridgeEnabled: true
+            Tags:
+                - Key: "Environment"
+                  Value: !Ref Environment
+                - Key: "Module"
+                  Value: !Ref Module
+################################ Lambda ########################################
+################################ Step Function #################################
+################################ API Gateway ###################################
+    RestApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: !Sub "${Environment}-${UniqueIdentifier}"
+            Auth:
+                ApiKeyRequired: true
+            Tags:
+                Environment: !Ref Environment
+                Module: !Ref Module
+            MethodSettings:
+              - HttpMethod: "*"
+                ResourcePath: "/*"
+                ThrottlingBurstLimit: 600
+    ApiKey:
+        Type: AWS::ApiGateway::ApiKey
+        Properties:
+            Name: !Sub "api-key-${UniqueIdentifier}"
+            Description: "API Key"
+            Enabled: true
+            Tags:
+                - Key: "Environment"
+                  Value: !Ref Environment
+                - Key: "Module"
+                  Value: !Ref Module
+    UsagePlan:
+        Type: AWS::ApiGateway::UsagePlan
+        Properties:
+            ApiStages:
+              - ApiId: !Ref RestApi
+                Stage: !Ref RestApi.Stage
+            Quota:
+                Limit: 1000
+                Period: MONTH
+            Description: "Api usage plan for RestApi"
+            UsagePlanName: !Sub "usage-plan-${UniqueIdentifier}"
+            Throttle:
+                BurstLimit: 600
+                RateLimit: 600
+    UsagePlanKey:
+        Type: AWS::ApiGateway::UsagePlanKey
+        Properties:
+            KeyId: !Ref ApiKey
+            KeyType: API_KEY
+            UsagePlanId: !Ref ApiUsagePlan
+Outputs:
+    HttpApiUrl:
+        Description: "URL of the API"
+        Value: !Sub 'https://${RestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/'
