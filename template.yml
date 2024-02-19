@@ -57,7 +57,7 @@ Resources:
             FunctionName: !Sub "process-data-${UniqueIdentifier}"
             Handler:
                 data_processor.lambda_handler
-            Runtime: python3.9
+            Runtime: python3.10
             Role: !GetAtt LambdaRole.Arn
             Environment:
                 Variables:
