@@ -29,3 +29,10 @@ every time we run the git commit command.
   ```
   pre-commit install
   ```
+
+## Deployment
+
+```
+sam build
+sam deploy --guided --capabilities CAPABILITY_NAMED_IAM
+```
