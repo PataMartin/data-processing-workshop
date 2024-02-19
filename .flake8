@@ -1,0 +1,3 @@
+[flake8]
+per-file-ignores= *.py: E731, E712, E203
+max-line-length=80
