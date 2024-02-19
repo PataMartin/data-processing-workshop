@@ -2,4 +2,4 @@
 *.swa
 *venv
 *.aws-sam
-
+*samconfig.toml
