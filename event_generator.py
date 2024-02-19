@@ -18,7 +18,7 @@ def main():
     while event_id < 11:
         print(f"Sending event {event_id}")
         payload = {
-            "id": "event_id",
+            "id": event_id,
             "source": "PAYMENTS" if event_id % 2 == 0 else "AUTH",
             "event_type": 1 if event_id % 2 == 0 else 2,
             "ts": str(dt.datetime.today()),
