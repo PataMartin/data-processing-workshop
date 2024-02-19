@@ -61,9 +61,10 @@ Resources:
             Role: !GetAtt LambdaRole.Arn
             Environment:
                 Variables:
-                    REGION: !Ref "AWS::Region"
+                    RAW_BUCKET: !Ref RawBucket
+                    REFINED_BUCKET: !Ref RefinedBucket
             Events:
-                InferenceEvent:
+                LogEvent:
                     Type: "HttpApi"
                     Properties:
                         ApiId: !Ref RestApi
