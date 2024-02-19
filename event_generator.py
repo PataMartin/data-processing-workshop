@@ -21,10 +21,11 @@ def main():
             "id": "event_id",
             "source": "PAYMENTS" if event_id % 2 == 0 else "AUTH",
             "event_type": 1 if event_id % 2 == 0 else 2,
-            "ts": str(dt.datetime.today),
+            "ts": str(dt.datetime.today()),
         }
         r = requests.post(URL, json=payload, headers=header)
-        print(f"response: {r.json()}")
+        r.raise_for_status()
+
         time.sleep(10)
         event_id += 1
 

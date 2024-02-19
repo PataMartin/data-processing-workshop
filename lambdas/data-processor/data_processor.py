@@ -32,8 +32,9 @@ def lambda_handler(event: dict, context) -> dict:
         }
     """
     try:
+        event = json.loads(event["body"])
+
         print(f"Storing raw event: {event}")
-        event = event["body"]
         event_key = f"{PREFIX}/{event['id']}_{event['source']}.json"
         s3_client.put_object(
             Bucket=RAW_BUCKET, Key=event_key, Body=json.dumps(event)
