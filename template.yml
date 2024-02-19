@@ -51,7 +51,66 @@ Resources:
                 - Key: "Module"
                   Value: !Ref Module
 ################################ Lambda ########################################
-################################ Step Function #################################
+    ProcessDataFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: lambdas/data-processor/
+            FunctionName: !Sub "process-data-${UniqueIdentifier}"
+            Handler:
+                data_processor.lambda_handler
+            Runtime: python3.9
+            Role: !GetAtt LambdaRole.Arn
+            Environment:
+                Variables:
+                    REGION: !Ref "AWS::Region"
+            Events:
+                InferenceEvent:
+                    Type: "HttpApi"
+                    Properties:
+                        ApiId: !Ref RestApi
+                        Method: POST
+                        Path: /log
+                        TimeoutInMillis: 15000
+                        PayloadFormatVersion: "2.0"
+                        Auth:
+                            ApiKeyRequired: true
+            Tags:
+                Environment: !Ref Environment
+                Module: !Ref Module
+    LambdaRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub "lambda-role-${Module}-${UniqueIdentifier}"
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - 'sts:AssumeRole'
+            Policies:
+                - PolicyName: !Sub "lambda-policy-${Module}-${UniqueIdentifier}"
+                  PolicyDocument:
+                      Version: "2012-10-17"
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - "s3:*"
+                            Resource: !Sub "arn:aws:s3:::*"
+                          -
+                            Sid: "cwlog"
+                            Effect: "Allow"
+                            Action:
+                                - "logs:*"
+                                - "cloudwatch:*"
+                            Resource: "*"
+            Tags:
+                - Key: "Environment"
+                  Value: !Ref Environment
+                - Key: "Module"
+                  Value: !Ref Module
 ################################ API Gateway ###################################
     RestApi:
         Type: AWS::Serverless::Api
@@ -97,6 +156,15 @@ Resources:
             KeyId: !Ref ApiKey
             KeyType: API_KEY
             UsagePlanId: !Ref ApiUsagePlan
+################################ Glue ##########################################
+    RefinedDb:
+        Type: AWS::Glue::Database
+        Properties:
+            CatalogId: !Ref AWS::AccountId
+            DatabaseInput:
+                Name: !Sub "refined_${Module}_${UniqueIdentifier}"
+                Description: !Sub "Refined Glue Database of stack ${AWS::StackName}"
+################################ Output ########################################
 Outputs:
     HttpApiUrl:
         Description: "URL of the API"
