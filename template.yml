@@ -53,6 +53,7 @@ Resources:
     ProcessDataFunction:
         Type: AWS::Serverless::Function
         Properties:
+            Timeout: 60
             CodeUri: lambdas/data-processor/
             FunctionName: !Sub "process-data-${UniqueIdentifier}"
             Handler:
