@@ -1,16 +1,10 @@
 import os
 
-from pyathena import connect
-from pyathena.pandas.cursor import PandasCursor
-
+import awswrangler as wr
 
 PREFIX = "event_logs"
 CURATED_BUCKET = os.environ["CURATED_BUCKET"]
 DB_NAME = os.environ["DB_NAME"]
-
-conn = connect(
-    s3_staging_dir=f"s3://{CURATED_BUCKET}/athena_queries", schema_name=DB_NAME
-)
 
 
 def lambda_handler(event: dict, context) -> None:
@@ -33,7 +27,6 @@ def lambda_handler(event: dict, context) -> None:
         INNER JOIN event_types
         ON logs.event_type = event_types.id"""
 
-    cur = conn.cursor(cursor=PandasCursor)
-    df = cur.execute(query).as_pandas()
+    df = wr.athena.read_sql_query(sql=query, database=DB_NAME)
 
     df.to_csv(f"s3://{CURATED_BUCKET}/{PREFIX}/event_logs.csv", index=False)
