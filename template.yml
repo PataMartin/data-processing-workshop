@@ -76,6 +76,29 @@ Resources:
             Tags:
                 Environment: !Ref Environment
                 Module: !Ref Module
+    CurateDataFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Timeout: 60
+            CodeUri: lambdas/update-curated-layer-lambda
+            FunctionName: !Sub "curate-data-${UniqueIdentifier}"
+            Handler:
+                update_curated_layer_lambda.lambda_handler
+            Runtime: python3.10
+            Role: !GetAtt LambdaRole.Arn
+            Environment:
+                Variables:
+                    DB_NAME: !Ref RefinedDb
+                    CURATED_BUCKET: !Ref CuratedBucket
+            Events:
+                LogEvent:
+                    Type: "Schedule"
+                    Properties:
+                      Schedule: "rate(1 hour)"
+                      Enabled: true
+            Tags:
+                Environment: !Ref Environment
+                Module: !Ref Module
     LambdaRole:
         Type: AWS::IAM::Role
         Properties:
@@ -105,6 +128,18 @@ Resources:
                                 - "logs:*"
                                 - "cloudwatch:*"
                             Resource: "*"
+                          -
+                            Sid: "athena"
+                            Effect: "Allow"
+                            Action:
+                                - "athena:*"
+                            Resource: "*"
+                          -
+                            Sid: "glue"
+                            Effect: "Allow"
+                            Action:
+                                - "glue:*"
+                            Resource: "*"
             Tags:
                 - Key: "Environment"
                   Value: !Ref Environment
@@ -125,6 +160,13 @@ Resources:
             DatabaseInput:
                 Name: !Sub "refined_${Module}_${UniqueIdentifier}"
                 Description: !Sub "Refined Glue Database of stack ${AWS::StackName}"
+    CuratedDb:
+        Type: AWS::Glue::Database
+        Properties:
+            CatalogId: !Ref AWS::AccountId
+            DatabaseInput:
+                Name: !Sub "curated_${Module}_${UniqueIdentifier}"
+                Description: !Sub "Curated Glue Database of stack ${AWS::StackName}"
 ################################ Output ########################################
 Outputs:
     HttpApiUrl:
