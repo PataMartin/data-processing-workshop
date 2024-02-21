@@ -29,4 +29,8 @@ def lambda_handler(event: dict, context) -> None:
 
     df = wr.athena.read_sql_query(sql=query, database=DB_NAME)
 
-    df.to_csv(f"s3://{CURATED_BUCKET}/{PREFIX}/event_logs.csv", index=False)
+    wr.s3.to_csv(
+        df=df,
+        path=f"s3://{CURATED_BUCKET}/{PREFIX}/event_logs.csv",
+        index=False,
+    )
